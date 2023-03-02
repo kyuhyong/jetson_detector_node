@@ -7,6 +7,7 @@ import Jetson.GPIO as GPIO
 
 from time import sleep
 from darknet_ros_msgs.msg import BoundingBoxes
+from sensor_msgs.msg import Image
 
 from oled_handler import OledHandler
 from lamp_handler import LampHandler
@@ -39,6 +40,8 @@ class JetsonDarknetNode:
     
     def __init__(self):
         self.timer = 0
+        self.bb_watchdog = 0
+        self.bb_timeout = False
         self.oled = OledHandler()
         #self.lamp = LampHandler()
         self.detector = Detector()
@@ -49,7 +52,7 @@ class JetsonDarknetNode:
         self.lamp_grn = Lamp(Color.RED, 15)
         self.lamp_buz = Lamp(Color.RED, 12)
         self.led_onboard = Lamp(Color.RED, 18)
-
+        rospy.Subscriber("/image_raw", Image, self.cb_image)
         rospy.Subscriber("/darknet_ros/bounding_boxes", BoundingBoxes, self.sub_boundingBoxes, queue_size=10)
         rospy.Timer(rospy.Duration(0.01), self.update_timer)
         self.timer1 = 0
@@ -83,6 +86,9 @@ class JetsonDarknetNode:
         GPIO.output(11, GPIO.LOW)
         GPIO.output(12, GPIO.LOW)
         GPIO.output(15, GPIO.LOW)
+
+    def cb_image(self, msg):
+        self.bb_watchdog = 0
 
     def sub_boundingBoxes(self, bb_msg):
         bb_cnt = 0
@@ -149,6 +155,14 @@ class JetsonDarknetNode:
 
     def update_timer(self, event):
         self.timer1+=1
+        self.bb_watchdog+=1
+        if self.bb_watchdog>500:
+            self.bb_timeout = True
+            self.lamp_red.On()
+        else:
+            if self.bb_timeout:
+                self.bb_timeout = False
+                self.lamp_red.Off()
 
     def main(self):
         rospy.spin()

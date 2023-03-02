@@ -5,7 +5,7 @@
     <param name="device" value="/dev/video0"/>
   </node>
   <!--<include file="$(find darknet_ros)/launch/yolo_v4-tiny.launch">-->
-  <include file="$(find darknet_ros)/launch/yolo_v4-tiny_dehumid.launch">
+  <include file="$(find darknet_ros)/launch/yolo_v4-tiny_hippo.launch">
   </include>
   <node pkg="web_video_server" type="web_video_server" name="web_video_server" output="screen" />
 </launch>
