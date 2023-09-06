@@ -1,0 +1,9 @@
+<launch>
+  <node pkg="jetson_darknet" type="jetson_darknet_node.py" name="jetson_darknet_node" output="screen">
+  </node>
+  <node pkg="uvc_camera" type="uvc_camera_node" name="uvc_camera_node" output="screen">
+  </node>
+  <include file="$(find darknet_ros)/launch/yolo_v4-tiny.launch">
+  </include>
+  <node pkg="web_video_server" type="web_video_server" name="web_video_server" output="screen" />
+</launch>
