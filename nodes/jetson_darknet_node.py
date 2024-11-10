@@ -43,7 +43,7 @@ class JetsonDarknetNode:
         self.bb_watchdog = 0
         self.bb_timeout = False
         self.oled = OledHandler()
-        #self.lamp = LampHandler()
+
         self.detector = Detector()
         self.box = BoxDetected()
         GPIO.setmode(GPIO.BOARD)
@@ -52,13 +52,18 @@ class JetsonDarknetNode:
         self.lamp_grn = Lamp(Color.RED, 15)
         self.lamp_buz = Lamp(Color.RED, 12)
         self.led_onboard = Lamp(Color.RED, 18)
+        GPIO.setup(16, GPIO.OUT)    #ADDED FOR RELAY
+        GPIO.output(16, GPIO.LOW)   #ADDED FOR RELAY
+        self.relay_state = 0        #ADDED FOR RELAY
+        self.relay_delay_cnt = 0    #ADDED FOR RELAY
         rospy.Subscriber("/image_raw", Image, self.cb_image)
         rospy.Subscriber("/darknet_ros/bounding_boxes", BoundingBoxes, self.sub_boundingBoxes, queue_size=10)
         rospy.Timer(rospy.Duration(0.01), self.update_timer)
+        rospy.Timer(rospy.Duration(0.1), self.update_relay) #ADDED FOR RELAY
         self.timer1 = 0
         self.grn_timer = 0
         
-        rate = rospy.Rate(5) # 5hz
+        rate = rospy.Rate(10) # Changed 5 Hz --> 10 Hz
         self.oled.WriteLine(0, "YOLO Standby")
         self.lamp_grn.On()
         #self.lamp.SetState(Color.GRN, LampState.ON)
@@ -79,7 +84,7 @@ class JetsonDarknetNode:
                     self.lamp_buz.Off()
             else:
                 self.grn_timer += 1
-                if self.grn_timer > 5:
+                if self.grn_timer > 9:
                     self.lamp_grn.Toggle()
                     self.grn_timer = 0
             rate.sleep()
@@ -120,6 +125,8 @@ class JetsonDarknetNode:
                             self.box.count += 1
                             if self.box.count > 1:
                                 if not self.detector.is_detected:
+                                    self.relay_state = 1        # ADDED FOR RELAY
+                                    self.relay_delay_cnt = 0    # ADDED FOR RELAY
                                     self.detector.is_detected = True
                                     self.detector.alarm_started = True
                                     self.detector.alarm_count = 0
@@ -153,6 +160,21 @@ class JetsonDarknetNode:
                     #self.lamp.SetState(Color.BUZZER, LampState.OFF)
             self.oled.WriteLine(1,"Pass")
 
+    # ADDED FOR RELAY
+    def update_relay(self):
+        if self.relay_state == 1:
+            self.relay_delay_cnt += 1
+            if self.relay_delay_cnt > 30:  # RELAY ON, 3 seconds after a Box is detected
+                GPIO.output(16, GPIO.HIGH)
+                self.relay_state = 2
+                self.relay_delay_cnt = 0
+        elif self.relay_state == 2:
+            self.relay_delay_cnt += 1
+            if self.relay_delay_cnt > 30:   # RELAY OFF, 3 seconds after
+                GPIO.output(16, GPIO.LOW)
+                self.relay_state = 0        # Reset RELAY state
+                self.relay_delay_cnt = 0 
+            
     def update_timer(self, event):
         self.timer1+=1
         self.bb_watchdog+=1
