@@ -12,6 +12,7 @@ from sensor_msgs.msg import Image
 from oled_handler import OledHandler
 from lamp_handler import LampHandler
 from lamp_handler import Color, LampState, Lamp
+import threading
 
 class Detector:
     def __init__(self):
@@ -56,6 +57,7 @@ class JetsonDarknetNode:
         GPIO.output(16, GPIO.LOW)   #ADDED FOR RELAY
         self.relay_state = 0        #ADDED FOR RELAY
         self.relay_delay_cnt = 0    #ADDED FOR RELAY
+        self.lock = threading.Lock()  # 스레드 락 추가
         rospy.Subscriber("/image_raw", Image, self.cb_image)
         rospy.Subscriber("/darknet_ros/bounding_boxes", BoundingBoxes, self.sub_boundingBoxes, queue_size=10)
         rospy.Timer(rospy.Duration(0.01), self.update_timer)
@@ -162,18 +164,19 @@ class JetsonDarknetNode:
 
     # ADDED FOR RELAY
     def update_relay(self):
-        if self.relay_state == 1:
-            self.relay_delay_cnt += 1
-            if self.relay_delay_cnt > 30:  # RELAY ON, 3 seconds after a Box is detected
-                GPIO.output(16, GPIO.HIGH)
-                self.relay_state = 2
-                self.relay_delay_cnt = 0
-        elif self.relay_state == 2:
-            self.relay_delay_cnt += 1
-            if self.relay_delay_cnt > 30:   # RELAY OFF, 3 seconds after
-                GPIO.output(16, GPIO.LOW)
-                self.relay_state = 0        # Reset RELAY state
-                self.relay_delay_cnt = 0 
+        with self.lock:  # 락으로 보호
+            if self.relay_state == 1:
+                self.relay_delay_cnt += 1
+                if self.relay_delay_cnt > 30:  # RELAY ON, 3 seconds after a Box is detected
+                    GPIO.output(16, GPIO.HIGH)
+                    self.relay_state = 2
+                    self.relay_delay_cnt = 0
+            elif self.relay_state == 2:
+                self.relay_delay_cnt += 1
+                if self.relay_delay_cnt > 30:   # RELAY OFF, 3 seconds after
+                    GPIO.output(16, GPIO.LOW)
+                    self.relay_state = 0        # Reset RELAY state
+                    self.relay_delay_cnt = 0 
             
     def update_timer(self, event):
         self.timer1+=1
