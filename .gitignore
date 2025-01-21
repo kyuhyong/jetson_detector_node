@@ -1,0 +1,3 @@
+*.pyc
+nodes/lamp_handler.pyc
+nodes/oled_handler.pyc

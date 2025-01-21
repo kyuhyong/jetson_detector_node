@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import sys
 import rospy
@@ -57,13 +58,18 @@ class JetsonDarknetNode:
         GPIO.output(16, GPIO.LOW)   #ADDED FOR RELAY
         self.relay_state = 0        #ADDED FOR RELAY
         self.relay_delay_cnt = 0    #ADDED FOR RELAY
+        self.relay_on_delay = 30  #RELAY ON DELAY 1/10 seconds
+        self.relay_off_delay = 30    #RELAY OFF DELAY 1/10 seconds
         self.lock = threading.Lock()  # 스레드 락 추가
+        self.timer1 = 0
+        self.grn_timer = 0
+        
         rospy.Subscriber("/image_raw", Image, self.cb_image)
         rospy.Subscriber("/darknet_ros/bounding_boxes", BoundingBoxes, self.sub_boundingBoxes, queue_size=10)
         rospy.Timer(rospy.Duration(0.01), self.update_timer)
         rospy.Timer(rospy.Duration(0.1), self.update_relay) #ADDED FOR RELAY
-        self.timer1 = 0
-        self.grn_timer = 0
+        
+        
         
         rate = rospy.Rate(10) # Changed 5 Hz --> 10 Hz
         self.oled.WriteLine(0, "YOLO Standby")
@@ -163,17 +169,17 @@ class JetsonDarknetNode:
             self.oled.WriteLine(1,"Pass")
 
     # ADDED FOR RELAY
-    def update_relay(self):
+    def update_relay(self, event):
         with self.lock:  # 락으로 보호
             if self.relay_state == 1:
                 self.relay_delay_cnt += 1
-                if self.relay_delay_cnt > 30:  # RELAY ON, 3 seconds after a Box is detected
+                if self.relay_delay_cnt > self.relay_on_delay:  # RELAY ON, after delay
                     GPIO.output(16, GPIO.HIGH)
                     self.relay_state = 2
                     self.relay_delay_cnt = 0
             elif self.relay_state == 2:
                 self.relay_delay_cnt += 1
-                if self.relay_delay_cnt > 30:   # RELAY OFF, 3 seconds after
+                if self.relay_delay_cnt > self.relay_off_delay:   # RELAY OFF, after delay
                     GPIO.output(16, GPIO.LOW)
                     self.relay_state = 0        # Reset RELAY state
                     self.relay_delay_cnt = 0 
