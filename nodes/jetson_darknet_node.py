@@ -5,25 +5,25 @@ import rospy
 from darknet_ros_msgs.msg import BoundingBoxes
 from sensor_msgs.msg import Image
 
-import imp
+import importlib
 # Check if GPIO module exists
 try:
-    imp.find_module("Jetson.GPIO")
+    importlib.import_module("Jetson.GPIO")
     import Jetson.GPIO as GPIO
     from lamp_handler import LampHandler
     from lamp_handler import Color, LampState, Lamp
     print("Jetson.GPIO module imported successfully.")
-except ImportError:
+except ModuleNotFoundError:
     GPIO = None
     print("Jetson.GPIO module not found, skipping import.")
 
 from time import sleep
 # Check if OLED module exist
 try:
-    imp.find_module("Adafruit_SSD1306")
+    importlib.import_module("Adafruit_SSD1306")
     from oled_handler import OledHandler
     OLED = True
-except ImportError:
+except ModuleNotFoundError:
     OLED = None
     print("OLED not exist, skipping module")
 
