@@ -1,0 +1,6 @@
+<launch>
+  <node pkg="jetson_darknet" type="jetson_darknet_node.py" name="jetson_darknet_node" output="screen">
+    <param name="relay_on_delay_ms" value="1000" />
+    <param name="relay_off_delay_ms" value="3000" />
+  </node>
+</launch>

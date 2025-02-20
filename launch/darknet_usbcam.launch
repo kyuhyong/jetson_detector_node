@@ -1,0 +1,17 @@
+<launch>
+  <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen" >
+    <param name="video_device" value="/dev/video0" />
+    <param name="image_width" value="1280" />
+    <param name="image_height" value="720" />
+    <param name="pixel_format" value="mjpeg" />
+    <param name="camera_frame_id" value="usb_cam" />
+    <param name="io_method" value="mmap"/>
+  </node>
+  <!--<node pkg="uvc_camera" type="uvc_camera_node" name="uvc_camera_node" output="screen">
+    <param name="device" value="/dev/video0"/>
+  </node>-->
+  <!--<include file="$(find darknet_ros)/launch/yolo_v4-tiny.launch">-->
+  <include file="$(find darknet_ros)/launch/yolo_v4-tiny_hippo.launch">
+  </include>
+  <!--<node pkg="web_video_server" type="web_video_server" name="web_video_server" output="screen" />-->
+</launch>
