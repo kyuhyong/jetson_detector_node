@@ -56,13 +56,16 @@ class BoxDetected:
 class JetsonDarknetNode:
     
     def __init__(self):
+        global OLED
         self.timer = 0
         self.bb_watchdog = 0
         self.bb_timeout = False
         if OLED:
             try:
                 self.oled = OledHandler()
+                rospy.loginfo("OLED Initialized")
             except:
+                rospy.loginfo("OLED not working")
                 OLED=None
 
         self.detector = Detector()
@@ -136,6 +139,7 @@ class JetsonDarknetNode:
         self.bb_watchdog = 0
 
     def sub_boundingBoxes(self, bb_msg):
+        global OLED
         bb_cnt = 0
         bb_found = False
         if not self.detector.is_ready:
