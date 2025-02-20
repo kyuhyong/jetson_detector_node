@@ -23,6 +23,7 @@ try:
     importlib.import_module("Adafruit_SSD1306")
     from oled_handler import OledHandler
     OLED = True
+    print("Adafruit_SSD1306 module imported successfully.")
 except ModuleNotFoundError:
     OLED = None
     print("OLED not exist, skipping module")
@@ -59,7 +60,10 @@ class JetsonDarknetNode:
         self.bb_watchdog = 0
         self.bb_timeout = False
         if OLED:
-            self.oled = OledHandler()
+            try:
+                self.oled = OledHandler()
+            except:
+                OLED=None
 
         self.detector = Detector()
         self.box = BoxDetected()
