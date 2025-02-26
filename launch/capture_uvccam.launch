@@ -1,0 +1,10 @@
+<launch>  
+  <node name="image_capture" pkg="jetson_darknet" type="image_capture_node.py" output="screen">
+    <param name="file_name" value="hippo"/>
+    <param name="image_path" value="/usb_cam/image_raw"/>
+    <param name="image_count_from" value="75"/>
+  </node>
+  <node pkg="uvc_camera" type="uvc_camera_node" name="uvc_camera_node" output="screen">
+    <param name="device" value="/dev/video0"/>
+  </node>
+</launch>

@@ -66,7 +66,7 @@ class JetsonDarknetNode:
                 rospy.loginfo("OLED Initialized")
             except:
                 rospy.loginfo("OLED not working")
-                OLED=None
+                OLED=False
 
         self.detector = Detector()
         self.box = BoxDetected()
@@ -159,15 +159,16 @@ class JetsonDarknetNode:
                 height = box.ymax - box.ymin
                 posX = box.xmin + width/2
                 posY = box.ymin + height/2
-                #rospy.loginfo("Box width: %d, height: %d", width, height)
+                #rospy.loginfo("No cover width: %d, height: %d", width, height)
                 # Do some filtering here
                 #if width > 130 and width < 200 and height > 60 and height < 150:
                 if self.box.time_last == 0:
                     self.box.time_last = self.timer1
                 else:
                     gap = self.timer1 - self.box.time_last
+                    #rospy.loginfo("Time gap = %d", gap)
                     #print("Time from last {}".format(gap))
-                    if self.timer1 - self.box.time_last < 25:
+                    if self.timer1 - self.box.time_last < 100:
                         self.box.time_last = self.timer1
                         self.box.count += 1
                         if self.box.count > 1:

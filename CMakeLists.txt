@@ -88,6 +88,7 @@ include_directories(
 
 catkin_install_python(PROGRAMS
    nodes/jetson_darknet_node.py
+   nodes/image_capture_node.py
    nodes/oled_handler.py
    nodes/lamp_handler.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
